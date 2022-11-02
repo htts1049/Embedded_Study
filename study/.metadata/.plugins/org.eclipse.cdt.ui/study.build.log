@@ -1,18 +1,28 @@
-18:32:37 **** Incremental Build of configuration Debug for project study ****
+00:17:10 **** Incremental Build of configuration Debug for project study ****
 make -j4 all 
-arm-none-eabi-gcc "../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal.d" -MT"Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal.o"
 arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'main':
+../Core/Src/main.c:96:32: warning: initialization of 'volatile unsigned int *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
+   96 |   volatile unsigned int *reg = 0x40021018; //  SET_BIT?•œ ê²°ê³¼ = 0x4002_1018 |= 16 ?˜ ê²°ê³¼
+      |                                ^~~~~~~~~~
+../Core/Src/main.c:111:34: warning: initialization of 'volatile unsigned int *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
+  111 |   volatile unsigned int * reg2 = 0x40011010;
+      |                                  ^~~~~~~~~~
+At top level:
+../Core/Src/main.c:184:13: warning: 'MX_GPIO_Init' defined but not used [-Wunused-function]
+  184 | static void MX_GPIO_Init(void)
+      |             ^~~~~~~~~~~~
 arm-none-eabi-gcc -o "study.elf" @"objects.list"   -mcpu=cortex-m3 -T"C:\Users\Administrator\Embedded\study\study\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="study.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 Finished building target: study.elf
  
 arm-none-eabi-size   study.elf 
 arm-none-eabi-objdump -h -S  study.elf  > "study.list"
    text	   data	    bss	    dec	    hex	filename
-   4700	     20	   1572	   6292	   1894	study.elf
+   4496	     20	   1572	   6088	   17c8	study.elf
 Finished building: default.size.stdout
  
 Finished building: study.list
  
 
-18:32:43 Build Finished. 0 errors, 0 warnings. (took 5s.620ms)
+00:17:11 Build Finished. 0 errors, 3 warnings. (took 1s.217ms)
 

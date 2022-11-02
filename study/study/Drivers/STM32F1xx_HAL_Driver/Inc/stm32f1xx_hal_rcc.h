@@ -516,6 +516,15 @@ typedef struct
                                         UNUSED(tmpreg); \
                                       } while(0U)
 
+/* SET_BIT는 REG와 BIT의 OR 연산
+ * UNUSED는 SET_BIT의 결과가 이상할 때 뜨는 디버깅 메시지 출력인데 일단은 없다.
+ * RCC = 0x4002_1000
+ * RCC->APB2ENR = 0x4002_1018
+ * RCC_APB2ENR_IOPCEN = 16
+ * -> 1을 4만큼 왼쪽으로 비트 이동
+ *
+ * 0x4002_1018 | 16
+ * */
 #define __HAL_RCC_GPIOC_CLK_ENABLE()   do { \
                                         __IO uint32_t tmpreg; \
                                         SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPCEN);\
@@ -523,6 +532,7 @@ typedef struct
                                         tmpreg = READ_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPCEN);\
                                         UNUSED(tmpreg); \
                                       } while(0U)
+
 
 #define __HAL_RCC_GPIOD_CLK_ENABLE()   do { \
                                         __IO uint32_t tmpreg; \

@@ -462,21 +462,25 @@ GPIO_PinState HAL_GPIO_ReadPin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin)
   *            @arg GPIO_PIN_SET: to set the port pin
   * @retval None
   */
+
+// GPIO
 void HAL_GPIO_WritePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState PinState)
 {
   /* Check the parameters */
-  assert_param(IS_GPIO_PIN(GPIO_Pin));
-  assert_param(IS_GPIO_PIN_ACTION(PinState));
+  assert_param(IS_GPIO_PIN(GPIO_Pin));			// GPIO 핀이 유효한지 아닌지 검사하는 함수
+  assert_param(IS_GPIO_PIN_ACTION(PinState));	// 실질적으로 파고 들어가보면 아무것도 안하고있다.
 
-  if (PinState != GPIO_PIN_RESET)
+  if (PinState != GPIO_PIN_RESET)				// 핀 상태가 RESET이 아니면
   {
-    GPIOx->BSRR = GPIO_Pin;
+    GPIOx->BSRR = GPIO_Pin;						// 받은 포트의 BSRR 값에 핀 값을 넣는다.
   }
-  else
+  else											// 핀 상태가 RESET, 즉 0일때
   {
-    GPIOx->BSRR = (uint32_t)GPIO_Pin << 16u;
-  }
-}
+    GPIOx->BSRR = (uint32_t)GPIO_Pin << 16u;	// 제어할 핀의 값을 16비트 왼쪽으로 시프트해서 포트의 BSRR 값에 넣는다.
+  }												// 일반적인 GPIO 제어와 다른데, 데이터 시트를 보면 알 수 있다.
+}												// 왜 그럴까?
+												// BSy 핀은 키고 싶으면 쓰는거고 , Reset(Low)로 떨어트리고 싶다면 BRy 핀을 쓰는 것.
+												// High로 하고싶다 -> BS에 넣고, Low로 하고싶다 -> BR에 넣는다.
 
 /**
   * @brief  Toggles the specified GPIO pin

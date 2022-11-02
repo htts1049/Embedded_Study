@@ -85,21 +85,44 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_GPIO_Init();
+
+
+  // MX_GPIO_Init();	// 다음으로 MX_GPIO_Init() 함수를 분석한다.
+
+
   /* USER CODE BEGIN 2 */
+
+  /* MX_GPIO_Init() 안의 __HAL_RCC_GPIOC_CLK_ENABLE() */
+  volatile unsigned int *reg = 0x40021018;	//  SET_BIT한 결과 = 0x4002_1018 |= 16 의 결과
+  *reg |=16;
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  /* MX_GPIO_Init() 안의 LED Configuration */
+  GPIO_InitStruct.Pin = GPIO_LED_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIO_LED_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
+  volatile unsigned int * reg2 = 0x40011010;
   while (1)
   {
+	  *reg2 |= 0x2000;		// 8192, GPIO_LED_Pin 값
+	  HAL_Delay(100);
+
+	  *reg2 |= (0x2000<<16);	// 8192를 비트 왼쪽으로 시프트 16번한 값 -> 비트 리셋
+	  HAL_Delay(100);
+
+
 	  /*
 	  HAL_GPIO_WritePin(GPIO_LED_GPIO_Port, GPIO_LED_Pin, 1);
 	  HAL_Delay(100);
 	  HAL_GPIO_WritePin(GPIO_LED_GPIO_Port, GPIO_LED_Pin, 0);
-	  */
+
 
 	  if(!HAL_GPIO_ReadPin(GPIO_SW_GPIO_Port, GPIO_SW_Pin)){
 		  HAL_GPIO_WritePin(GPIO_LED_GPIO_Port, GPIO_LED_Pin, 0);
@@ -107,7 +130,9 @@ int main(void)
 	  else{
 		  HAL_GPIO_WritePin(GPIO_LED_GPIO_Port, GPIO_LED_Pin, 1);
 	  }
-	  HAL_Delay(100);
+	  */
+
+	  //HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -161,11 +186,23 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();		// PC13을 제어하기위해 GPIOC 클럭을 켜줌
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
+
   /*Configure GPIO pin Output Level */
+
+  // GPIO_WritePin 분석
+  // GPIO 포트, 핀, 상태를 넘김
+  // GPIO_LED_GPIO_Port = 0x4001_1000
+  // GPIO_LED_Pin = 8192  ( 13번지 자리 , 레퍼런스 매뉴얼을 보면 GPIOx_BSRR 에서 BS13 비트를 다루는 것, BR13이 아닌 이유는 우리가 하려는 건 키는 거(Set)니까 )
+  // GPIO_PIN_SET = 1
+
   HAL_GPIO_WritePin(GPIO_LED_GPIO_Port, GPIO_LED_Pin, GPIO_PIN_SET);
+
+
+
+
 
   /*Configure GPIO pin : GPIO_LED_Pin */
   GPIO_InitStruct.Pin = GPIO_LED_Pin;
