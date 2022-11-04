@@ -98,11 +98,23 @@ int main(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* MX_GPIO_Init() 안의 LED Configuration */
-  GPIO_InitStruct.Pin = GPIO_LED_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  GPIO_InitStruct.Pin = GPIO_LED_Pin;						// PC13 : 1<<13 , 0x2000 = 8192
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;				// Pull-Up & Pull-Down : 1
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;						// Pull-Down : 2
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;				// 3을 0만큼 비트 레프트 시프트. 결국 3
   HAL_GPIO_Init(GPIO_LED_GPIO_Port, &GPIO_InitStruct);
+  /* GPIO_LED_GPIO_Port는 GPIOC 값, &GPIO_InitStruct는 위에서 설정한 PC13번과 PP 등의 값
+   * */
+
+  /* 위의 LED 설정은 아래 2줄로 대체가 가능하다.
+   * 이렇게 되면 HAL 드라이브의 도움이 하나도 없이 LED의 제어가 가능하게 됨
+   * -> 이를 통해 GPIO가 어떻게 제어가 되는 건지 이해할 수 있다.
+   * ++ 레지스터의 주소 번지를 보면서 확인해보자.
+   *
+   * volatile unsigned int * reg2 = 0x40011004;
+   * *reg2 = (*reg2 & ~(15UL << 20U)) | (3U <<20U);
+   * */
+
 
   /* USER CODE END 2 */
 

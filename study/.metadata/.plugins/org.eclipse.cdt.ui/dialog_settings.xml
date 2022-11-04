@@ -8,8 +8,19 @@
 		<item key="caseSensitive" value="false"/>
 		<item key="searchFlags" value="227191"/>
 		<list key="previousPatterns">
+			<item value="GPIOx"/>
+			<item value="GPIO_CRL_MODE0_Pos"/>
+			<item value="GPIO_CRL_MODE0_Msk"/>
+			<item value="assert_failed"/>
 			<item value="STM32F101x6"/>
 			<item value="FLASH_R_BASE"/>
 		</list>
+	</section>
+	<section name="org.eclipse.cdt.ui.OPEN_ACTION_SELECTION_DIALOG_SECTION">
+		<item key="DIALOG_X_ORIGIN" value="769"/>
+		<item key="DIALOG_Y_ORIGIN" value="236"/>
+		<item key="DIALOG_WIDTH" value="398"/>
+		<item key="DIALOG_HEIGHT" value="438"/>
+		<item key="DIALOG_FONT_NAME" value="1|맑은 고딕|9.0|0|WINDOWS|1|-12|0|0|0|400|0|0|0|1|0|0|0|0|맑은 고딕"/>
 	</section>
 </section>

@@ -37,13 +37,13 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  16 .debug_macro  000158d2  00000000  00000000  000240c0  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   0000451c  00000000  00000000  00039992  2**0
+ 17 .debug_line   00004520  00000000  00000000  00039992  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    0007b9a7  00000000  00000000  0003deae  2**0
+ 18 .debug_str    0007b9a7  00000000  00000000  0003deb2  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000050  00000000  00000000  000b9855  2**0
+ 19 .comment      00000050  00000000  00000000  000b9859  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00000d34  00000000  00000000  000b98a8  2**2
+ 20 .debug_frame  00000d34  00000000  00000000  000b98ac  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -123,16 +123,16 @@ int main(void)
  8000174:	60da      	str	r2, [r3, #12]
 
   /* MX_GPIO_Init() 안의 LED Configuration */
-  GPIO_InitStruct.Pin = GPIO_LED_Pin;
+  GPIO_InitStruct.Pin = GPIO_LED_Pin;						// PC13 : 1<<13 , 0x2000 = 8192
  8000176:	f44f 5300 	mov.w	r3, #8192	; 0x2000
  800017a:	603b      	str	r3, [r7, #0]
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;				// Pull-Up & Pull-Down : 1
  800017c:	2301      	movs	r3, #1
  800017e:	607b      	str	r3, [r7, #4]
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;						// Pull-Down : 2
  8000180:	2302      	movs	r3, #2
  8000182:	60bb      	str	r3, [r7, #8]
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;				// 3을 0만큼 비트 레프트 시프트. 결국 3
  8000184:	2303      	movs	r3, #3
  8000186:	60fb      	str	r3, [r7, #12]
   HAL_GPIO_Init(GPIO_LED_GPIO_Port, &GPIO_InitStruct);
@@ -1192,40 +1192,40 @@ void HAL_GPIO_Init(GPIO_TypeDef  *GPIOx, GPIO_InitTypeDef *GPIO_Init)
   uint32_t config = 0x00u;
  8000636:	2300      	movs	r3, #0
  8000638:	623b      	str	r3, [r7, #32]
-  assert_param(IS_GPIO_ALL_INSTANCE(GPIOx));
-  assert_param(IS_GPIO_PIN(GPIO_Init->Pin));
-  assert_param(IS_GPIO_MODE(GPIO_Init->Mode));
+  assert_param(IS_GPIO_ALL_INSTANCE(GPIOx));	// IS_GPIO_ALL_INSTANCE() -> GPIOx가 GPIOA~GPIOE 안에 소속되는지 확인
+  assert_param(IS_GPIO_PIN(GPIO_Init->Pin));	// IS_GPIO_PIN -> GPIO 핀이 맞는지 확인
+  assert_param(IS_GPIO_MODE(GPIO_Init->Mode));	// GPIO의 여러 모드 중 하나라도 해당되는지 확인
 
   /* Configure the port pins */
-  while (((GPIO_Init->Pin) >> position) != 0x00u)
+  while (((GPIO_Init->Pin) >> position) != 0x00u)	// GPIO_Init->Pin 은 우리가 넣어둔 PC13(=8192)의 비트값이 들어가있다.
  800063a:	e169      	b.n	8000910 <HAL_GPIO_Init+0x2e8>
-  {
+  {													// 처음 position은 0이 들어가있지만, while 문 맨 아래에서 1씩 증가한다.
     /* Get the IO position */
-    ioposition = (0x01uL << position);
+    ioposition = (0x01uL << position);				// IO position 은 1을 position 만큼 왼쪽으로 민 값
  800063c:	2201      	movs	r2, #1
  800063e:	6a7b      	ldr	r3, [r7, #36]	; 0x24
  8000640:	fa02 f303 	lsl.w	r3, r2, r3
  8000644:	61fb      	str	r3, [r7, #28]
 
     /* Get the current IO position */
-    iocurrent = (uint32_t)(GPIO_Init->Pin) & ioposition;
+    iocurrent = (uint32_t)(GPIO_Init->Pin) & ioposition;	// IO current =  AND(받은 핀의 값, IO position)
  8000646:	683b      	ldr	r3, [r7, #0]
  8000648:	681b      	ldr	r3, [r3, #0]
  800064a:	69fa      	ldr	r2, [r7, #28]
  800064c:	4013      	ands	r3, r2
  800064e:	61bb      	str	r3, [r7, #24]
 
-    if (iocurrent == ioposition)
+    if (iocurrent == ioposition)	// 이 if문은 position 값 증가 전에 끝난다. 즉, IO current != IO position 이면 아무것도 안한다.
  8000650:	69ba      	ldr	r2, [r7, #24]
  8000652:	69fb      	ldr	r3, [r7, #28]
  8000654:	429a      	cmp	r2, r3
  8000656:	f040 8158 	bne.w	800090a <HAL_GPIO_Init+0x2e2>
-    {
-      /* Check the Alternate function parameters */
       assert_param(IS_GPIO_AF_INSTANCE(GPIOx));
 
       /* Based on the required mode, filling config variable with MODEy[1:0] and CNFy[3:2] corresponding bits */
-      switch (GPIO_Init->Mode)
+
+
+      switch (GPIO_Init->Mode)		// 그래서 if문 안에 들어오면 하는것 : GPIO 모드에 따라 config 값 설정
  800065a:	683b      	ldr	r3, [r7, #0]
  800065c:	685b      	ldr	r3, [r3, #4]
  800065e:	4a9a      	ldr	r2, [pc, #616]	; (80008c8 <HAL_GPIO_Init+0x2a0>)
@@ -1360,10 +1360,11 @@ void HAL_GPIO_Init(GPIO_TypeDef  *GPIOx, GPIO_InitTypeDef *GPIO_Init)
  8000754:	e000      	b.n	8000758 <HAL_GPIO_Init+0x130>
           break;
  8000756:	bf00      	nop
-      }
 
-      /* Check if the current bit belongs to first half or last half of the pin count number
-       in order to address CRH or CRL register*/
+      // IO current : 1을 옆으로 13번 민 값
+      // GPIO_PIN_8 : 1을 옆으로 8번 민 값
+      // IO current가 8핀보다 작냐 크냐 따져서 작으면 왼쪽 값, 크면 오른쪽 값을 각각에 넣는다.
+      // CRL : 컨트롤 레지스터 Low의 주소값,		CRH : 컨트롤 레지스터 High의 주소값
       configregister = (iocurrent < GPIO_PIN_8) ? &GPIOx->CRL     : &GPIOx->CRH;
  8000758:	69bb      	ldr	r3, [r7, #24]
  800075a:	2bff      	cmp	r3, #255	; 0xff
@@ -1617,7 +1618,7 @@ void HAL_GPIO_Init(GPIO_TypeDef  *GPIOx, GPIO_InitTypeDef *GPIO_Init)
  800090a:	6a7b      	ldr	r3, [r7, #36]	; 0x24
  800090c:	3301      	adds	r3, #1
  800090e:	627b      	str	r3, [r7, #36]	; 0x24
-  while (((GPIO_Init->Pin) >> position) != 0x00u)
+  while (((GPIO_Init->Pin) >> position) != 0x00u)	// GPIO_Init->Pin 은 우리가 넣어둔 PC13(=8192)의 비트값이 들어가있다.
  8000910:	683b      	ldr	r3, [r7, #0]
  8000912:	681a      	ldr	r2, [r3, #0]
  8000914:	6a7b      	ldr	r3, [r7, #36]	; 0x24

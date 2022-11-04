@@ -186,27 +186,35 @@ void HAL_GPIO_Init(GPIO_TypeDef  *GPIOx, GPIO_InitTypeDef *GPIO_Init)
   uint32_t registeroffset;       /* offset used during computation of CNF and MODE bits placement inside CRL or CRH register */
 
   /* Check the parameters */
-  assert_param(IS_GPIO_ALL_INSTANCE(GPIOx));
-  assert_param(IS_GPIO_PIN(GPIO_Init->Pin));
-  assert_param(IS_GPIO_MODE(GPIO_Init->Mode));
+
+  // 원래 assert_param 안의 변수가 0이면 뭘 하고 1이면 뭘 하려고 만들어 둔건데, 사실 지금은 하는게 없다
+  // 그렇다라는 정도만 이해하고 넘어간다.
+  assert_param(IS_GPIO_ALL_INSTANCE(GPIOx));	// IS_GPIO_ALL_INSTANCE() -> GPIOx가 GPIOA~GPIOE 안에 소속되는지 확인
+  assert_param(IS_GPIO_PIN(GPIO_Init->Pin));	// IS_GPIO_PIN -> GPIO 핀이 맞는지 확인
+  assert_param(IS_GPIO_MODE(GPIO_Init->Mode));	// GPIO의 여러 모드 중 하나라도 해당되는지 확인
 
   /* Configure the port pins */
-  while (((GPIO_Init->Pin) >> position) != 0x00u)
-  {
+  while (((GPIO_Init->Pin) >> position) != 0x00u)	// GPIO_Init->Pin 은 우리가 넣어둔 PC13(=8192)의 비트값이 들어가있다.
+  {													// 처음 position은 0이 들어가있지만, while 문 맨 아래에서 1씩 증가한다.
     /* Get the IO position */
-    ioposition = (0x01uL << position);
+    ioposition = (0x01uL << position);				// IO position 은 1을 position 만큼 왼쪽으로 민 값
 
     /* Get the current IO position */
-    iocurrent = (uint32_t)(GPIO_Init->Pin) & ioposition;
+    iocurrent = (uint32_t)(GPIO_Init->Pin) & ioposition;	// IO current =  AND(받은 핀의 값, IO position)
 
-    if (iocurrent == ioposition)
+    if (iocurrent == ioposition)	// 이 if문은 position 값 증가 전에 끝난다. 즉, IO current != IO position 이면 아무것도 안한다.
     {
       /* Check the Alternate function parameters */
+      // 앞서 설명했듯 이 함수는 결국 0이다. 하는 것이 없다.
       assert_param(IS_GPIO_AF_INSTANCE(GPIOx));
 
       /* Based on the required mode, filling config variable with MODEy[1:0] and CNFy[3:2] corresponding bits */
-      switch (GPIO_Init->Mode)
-      {
+
+
+      switch (GPIO_Init->Mode)		// 그래서 if문 안에 들어오면 하는것 : GPIO 모드에 따라 config 값 설정
+      {								// config는 우리가 넣어둔 GPIO_Init->Speed = 3과 GPIO_CR_CNF_GP_OUTPUT_PP = 0 을 더한 값
+
+
         /* If we are configuring the pin in OUTPUT push-pull mode */
         case GPIO_MODE_OUTPUT_PP:
           /* Check the GPIO speed parameter */
@@ -275,12 +283,26 @@ void HAL_GPIO_Init(GPIO_TypeDef  *GPIOx, GPIO_InitTypeDef *GPIO_Init)
           break;
       }
 
+      // switch 문을 나와서 이제 아래 실행
+
       /* Check if the current bit belongs to first half or last half of the pin count number
        in order to address CRH or CRL register*/
+
+      // IO current : 1을 옆으로 13번 민 값
+      // GPIO_PIN_8 : 1을 옆으로 8번 민 값
+      // IO current가 8핀보다 작냐 크냐 따져서 작으면 왼쪽 값, 크면 오른쪽 값을 각각에 넣는다.
+      // CRL : 컨트롤 레지스터 Low의 주소값 = 0x4001_1000,		CRH : 컨트롤 레지스터 High의 주소값 = 0x4001_1004
+      // 이 때 GPIOC = 0x4001_1000 이었음을 유의하자
+
+      // 레지스터 오프셋 값은 이제 position-8 = 13-8 = 5를 왼쪽으로 2비트씩 민 값
+      // 5 = 101 << 2 = 10100 = 16+4 = 20
+
       configregister = (iocurrent < GPIO_PIN_8) ? &GPIOx->CRL     : &GPIOx->CRH;
       registeroffset = (iocurrent < GPIO_PIN_8) ? (position << 2u) : ((position - 8u) << 2u);
 
       /* Apply the new configuration of the pin to the register */
+
+
       MODIFY_REG((*configregister), ((GPIO_CRL_MODE0 | GPIO_CRL_CNF0) << registeroffset), (config << registeroffset));
 
       /*--------------------- EXTI Mode Configuration ------------------------*/

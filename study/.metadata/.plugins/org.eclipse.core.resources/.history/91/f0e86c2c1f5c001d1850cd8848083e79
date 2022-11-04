@@ -69,7 +69,9 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+
+	HAL_Init();		// HAL_Init() 분석, 함수이름 Ctrl+클릭해서 따라가자
+					// 이 한 줄짜리 코드를 분석하는데 수많은 주석을 달았다.. 이런 식으로 조금씩 내공을 늘려가는 것이 임베디드 공부다. 시간이 필요하다..
 
   /* USER CODE BEGIN Init */
 
@@ -83,16 +85,65 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_GPIO_Init();
+
+
+  // MX_GPIO_Init();	// 다음으로 MX_GPIO_Init() 함수를 분석한다.
+
+
   /* USER CODE BEGIN 2 */
+
+  /* MX_GPIO_Init() 안의 __HAL_RCC_GPIOC_CLK_ENABLE() */
+  volatile unsigned int *reg = 0x40021018;	//  SET_BIT한 결과 = 0x4002_1018 |= 16 의 결과
+  *reg |=16;
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  /* MX_GPIO_Init() 안의 LED Configuration */
+  GPIO_InitStruct.Pin = GPIO_LED_Pin;						// PC13 : 1<<13 , 0x2000 = 8192
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;				// Pull-Up & Pull-Down : 1
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;						// Pull-Down : 2
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;				// 3을 0만큼 비트 레프트 시프트. 결국 3
+  HAL_GPIO_Init(GPIO_LED_GPIO_Port, &GPIO_InitStruct);
+  /* GPIO_LED_GPIO_Port는 GPIOC 값, &GPIO_InitStruct는 위에서 설정한 PC13번과 PP 등의 값
+   * */
+
+  /* 위의 LED 설정은 아래 2줄로 대체가 가능하다.
+   * 이렇게 되면 HAL 드라이브의 도움이 하나도 없이 LED의 제어가 가능하게 됨
+   * -> 이를 통해 GPIO가 어떻게 제어가 되는 건지 이해할 수 있다.
+   *
+   * volatile unsigned int * reg2 = 0x40011004;
+   * *reg2 = (*reg2 & ~(15UL << 20U)) | (3U <<20U);
+   * */
+
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  volatile unsigned int * reg2 = 0x40011010;
   while (1)
   {
-	  HAL_Delay(1000);
+	  *reg2 |= 0x2000;		// 8192, GPIO_LED_Pin 값
+	  HAL_Delay(100);
+
+	  *reg2 |= (0x2000<<16);	// 8192를 비트 왼쪽으로 시프트 16번한 값 -> 비트 리셋
+	  HAL_Delay(100);
+
+
+	  /*
+	  HAL_GPIO_WritePin(GPIO_LED_GPIO_Port, GPIO_LED_Pin, 1);
+	  HAL_Delay(100);
+	  HAL_GPIO_WritePin(GPIO_LED_GPIO_Port, GPIO_LED_Pin, 0);
+
+
+	  if(!HAL_GPIO_ReadPin(GPIO_SW_GPIO_Port, GPIO_SW_Pin)){
+		  HAL_GPIO_WritePin(GPIO_LED_GPIO_Port, GPIO_LED_Pin, 0);
+	  }
+	  else{
+		  HAL_GPIO_WritePin(GPIO_LED_GPIO_Port, GPIO_LED_Pin, 1);
+	  }
+	  */
+
+	  //HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -143,9 +194,39 @@ void SystemClock_Config(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();		// PC13을 제어하기위해 GPIOC 클럭을 켜줌
   __HAL_RCC_GPIOA_CLK_ENABLE();
+
+
+  /*Configure GPIO pin Output Level */
+
+  // GPIO_WritePin 분석
+  // GPIO 포트, 핀, 상태를 넘김
+  // GPIO_LED_GPIO_Port = 0x4001_1000
+  // GPIO_LED_Pin = 8192  ( 13번지 자리 , 레퍼런스 매뉴얼을 보면 GPIOx_BSRR 에서 BS13 비트를 다루는 것, BR13이 아닌 이유는 우리가 하려는 건 키는 거(Set)니까 )
+  // GPIO_PIN_SET = 1
+
+  HAL_GPIO_WritePin(GPIO_LED_GPIO_Port, GPIO_LED_Pin, GPIO_PIN_SET);
+
+
+
+
+
+  /*Configure GPIO pin : GPIO_LED_Pin */
+  GPIO_InitStruct.Pin = GPIO_LED_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIO_LED_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : GPIO_SW_Pin */
+  GPIO_InitStruct.Pin = GPIO_SW_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIO_SW_GPIO_Port, &GPIO_InitStruct);
 
 }
 
