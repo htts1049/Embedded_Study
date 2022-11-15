@@ -142,16 +142,14 @@ HAL_TickFreqTypeDef uwTickFreq = HAL_TICK_FREQ_DEFAULT;  /* 1KHz */
 HAL_StatusTypeDef HAL_Init(void)
 {
   /* Configure Flash prefetch */
-#if (PREFETCH_ENABLE != 0)	// PREFETCH_ENABLE이 안되어 있으면 실행문으로 들어간다.
+#if (PREFETCH_ENABLE != 0)
 #if defined(STM32F101x6) || defined(STM32F101xB) || defined(STM32F101xE) || defined(STM32F101xG) || \
     defined(STM32F102x6) || defined(STM32F102xB) || \
     defined(STM32F103x6) || defined(STM32F103xB) || defined(STM32F103xE) || defined(STM32F103xG) || \
     defined(STM32F105xC) || defined(STM32F107xC)
 
   /* Prefetch buffer is not available on value line devices */
-
-  __HAL_FLASH_PREFETCH_BUFFER_ENABLE();		// 조건을 만족했으니 이 함수가 실행된다. 따라가보자.
-
+  __HAL_FLASH_PREFETCH_BUFFER_ENABLE();
 #endif
 #endif /* PREFETCH_ENABLE */
 
